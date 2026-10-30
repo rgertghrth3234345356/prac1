@@ -1,17 +1,19 @@
-"""Интерактивная командная оболочка первого этапа."""
+"""Интерактивная командная оболочка второго этапа."""
+
+from pathlib import Path
 
 from parser import CommandParseError, parse_command
 
 
 class Shell:
-    """Минимальная оболочка с заглушками команд ls и cd."""
+    """Оболочка с REPL, заглушками команд и поддержкой стартовых скриптов."""
 
     def __init__(self, prompt: str) -> None:
         self.prompt = prompt
         self.should_exit = False
 
     def repl(self) -> None:
-        """Запустить цикл чтения и выполнения команд."""
+        """Запустить интерактивный цикл."""
         while not self.should_exit:
             try:
                 line = input(self.prompt)
@@ -20,8 +22,21 @@ class Shell:
                 break
             self.execute_line(line)
 
+    def run_script(self, filename: str) -> None:
+        """Выполнить скрипт, показывая команды как введённые пользователем."""
+        with Path(filename).open("r", encoding="utf-8") as script:
+            for raw_line in script:
+                line = raw_line.rstrip("\r\n")
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                print(f"{self.prompt}{line}")
+                self.execute_line(line)
+                if self.should_exit:
+                    break
+
     def execute_line(self, line: str) -> None:
-        """Разобрать строку и вызвать соответствующую команду."""
+        """Разобрать и выполнить команду."""
         try:
             args = parse_command(line)
         except CommandParseError as error:
@@ -43,24 +58,21 @@ class Shell:
 
     @staticmethod
     def require_count(command: str, args: list[str], minimum: int, maximum: int) -> None:
-        """Проверить допустимое количество аргументов."""
+        """Проверить число аргументов команды."""
         if not minimum <= len(args) <= maximum:
-            if minimum == maximum:
-                expected = str(minimum)
-            else:
-                expected = f"от {minimum} до {maximum}"
+            expected = str(minimum) if minimum == maximum else f"от {minimum} до {maximum}"
             raise ValueError(
                 f"ожидалось аргументов: {expected}, получено: {len(args)}"
             )
 
     def cmd_ls(self, args: list[str]) -> None:
-        """Заглушка ls: вывести имя команды и переданные аргументы."""
+        """Заглушка команды ls до реализации VFS на третьем этапе."""
         self.require_count("ls", args, 0, 1)
         print("Команда: ls")
         print(f"Аргументы: {args}")
 
     def cmd_cd(self, args: list[str]) -> None:
-        """Заглушка cd: вывести имя команды и переданные аргументы."""
+        """Заглушка команды cd до реализации VFS на третьем этапе."""
         self.require_count("cd", args, 0, 1)
         print("Команда: cd")
         print(f"Аргументы: {args}")
