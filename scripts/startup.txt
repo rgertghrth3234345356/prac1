@@ -1,0 +1,17 @@
+# Демонстрация команд и вложенных каталогов.
+pwd
+ls
+cat README.txt
+cd home/student
+pwd
+ls
+cat notes.txt
+cd projects/demo
+pwd
+ls
+cat main.py
+cd /
+unknown_command
+cd missing-directory
+ls one two
+exit

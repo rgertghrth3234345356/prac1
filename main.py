@@ -1,4 +1,4 @@
-"""Точка входа в эмулятор оболочки второго этапа."""
+"""Точка входа в финальную версию эмулятора UNIX-оболочки."""
 
 import argparse
 import getpass
@@ -7,25 +7,36 @@ import sys
 from pathlib import Path
 
 from shell import Shell
+from vfs import VFS, VFSLoadError
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Создать парсер параметров запуска."""
+    """Создать парсер параметров командной строки."""
     parser = argparse.ArgumentParser(
-        description="Учебный эмулятор UNIX-подобной командной оболочки."
+        description=(
+            "Эмулятор UNIX-подобной оболочки с виртуальной ФС в памяти."
+        )
     )
-    parser.add_argument("--vfs", required=True, help="Путь к образу VFS.")
-    parser.add_argument("--prompt", default=None, help="Пользовательское приглашение.")
-    parser.add_argument("--script", default=None, help="Путь к стартовому скрипту.")
+    parser.add_argument(
+        "--vfs", required=True, help="Путь к JSON-образу VFS."
+    )
+    parser.add_argument(
+        "--prompt", default=None, help="Пользовательское приглашение REPL."
+    )
+    parser.add_argument(
+        "--script", default=None, help="Стартовый скрипт перед REPL."
+    )
     return parser
 
 
 def main() -> int:
-    """Прочитать конфигурацию, выполнить скрипт и запустить REPL."""
+    """Загрузить конфигурацию и VFS, выполнить скрипт, запустить REPL."""
     args = build_parser().parse_args()
     username = getpass.getuser()
     hostname = socket.gethostname()
-    prompt = args.prompt if args.prompt is not None else f"{username}@{hostname}:~$ "
+    prompt = args.prompt
+    if prompt is None:
+        prompt = f"{username}@{hostname}:~$ "
 
     print("=== Конфигурация эмулятора ===")
     print(f"Путь к VFS: {Path(args.vfs).resolve()}")
@@ -34,12 +45,21 @@ def main() -> int:
     print(f"Стартовый скрипт: {script_path}")
     print("==============================")
 
-    shell = Shell(prompt)
+    try:
+        vfs = VFS.from_json(args.vfs)
+    except VFSLoadError as error:
+        print(f"Ошибка загрузки VFS: {error}", file=sys.stderr)
+        return 1
+
+    shell = Shell(vfs, prompt)
     if args.script:
         try:
             shell.run_script(args.script)
         except OSError as error:
-            print(f"Ошибка чтения стартового скрипта: {error}", file=sys.stderr)
+            print(
+                f"Ошибка чтения стартового скрипта: {error}",
+                file=sys.stderr,
+            )
             return 1
         if shell.should_exit:
             return 0

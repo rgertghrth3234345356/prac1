@@ -1,0 +1,31 @@
+{
+  "type": "dir",
+  "children": {
+    "README.txt": {"type": "file", "content": "Демонстрационный образ VFS.\n"},
+    "data.bin": {"type": "file", "encoding": "base64", "content": "AAEC/w=="},
+    "etc": {
+      "type": "dir",
+      "children": {"hostname": {"type": "file", "content": "virtual-host\n"}}
+    },
+    "home": {
+      "type": "dir",
+      "children": {
+        "student": {
+          "type": "dir",
+          "children": {
+            "notes.txt": {"type": "file", "content": "Файлы существуют только в памяти.\n"},
+            "projects": {
+              "type": "dir",
+              "children": {
+                "demo": {
+                  "type": "dir",
+                  "children": {"main.py": {"type": "file", "content": "print('Привет из VFS')\n"}}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
